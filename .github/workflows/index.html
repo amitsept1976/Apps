@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Clinic Portal</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    input, button, select { padding: 8px; margin: 5px 0; width: 250px; }
+    .section { margin-bottom: 40px; }
+    .card { border: 1px solid #ccc; padding: 15px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Clinic Portal</h1>
+
+  <!-- LOGIN SECTION -->
+  <div class="section">
+    <h2>Login</h2>
+    <input id="email" placeholder="Email"><br>
+    <input id="password" type="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <p id="loginStatus"></p>
+  </div>
+
+  <!-- BOOK APPOINTMENT -->
+  <div class="section">
+    <h2>Book Appointment</h2>
+    <input id="patientId" placeholder="Patient ID"><br>
+    <input id="apptDate" type="datetime-local"><br>
+    <input id="reason" placeholder="Reason"><br>
+    <button onclick="bookAppointment()">Book</button>
+    <p id="bookStatus"></p>
+  </div>
+
+  <!-- LIST APPOINTMENTS -->
+  <div class="section">
+    <h2>Appointments</h2>
+    <button onclick="loadAppointments()">Load Appointments</button>
+    <div id="appointments"></div>
+  </div>
+
+<script>
+  const API = "https://YOUR-AZURE-APP-SERVICE.azurewebsites.net";
+
+  let token = null;
+
+  async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (data.access_token) {
+      token = data.access_token;
+      document.getElementById("loginStatus").innerText = "Logged in!";
+    } else {
+      document.getElementById("loginStatus").innerText = "Login failed";
+    }
+  }
+
+  async function bookAppointment() {
+    if (!token) return alert("Please log in first");
+
+    const patientId = document.getElementById("patientId").value;
+    const appointment_at = document.getElementById("apptDate").value;
+    const reason = document.getElementById("reason").value;
+
+    const res = await fetch(`${API}/appointments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ patient_id: patientId, appointment_at, reason })
+    });
+
+    const data = await res.json();
+    document.getElementById("bookStatus").innerText =
+      data.id ? "Appointment booked!" : "Error booking appointment";
+  }
+
+  async function loadAppointments() {
+    if (!token) return alert("Please log in first");
+
+    const res = await fetch(`${API}/appointments`, {
+      headers: { "Authorization": "Bearer " + token }
+    });
+
+    const list = await res.json();
+    const container = document.getElementById("appointments");
+    container.innerHTML = "";
+
+    list.forEach(a => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <strong>ID:</strong> ${a.id}<br>
+        <strong>Patient:</strong> ${a.patient_id}<br>
+        <strong>Date:</strong> ${new Date(a.appointment_at).toLocaleString()}<br>
+        <strong>Status:</strong> ${a.status}
+      `;
+      container.appendChild(div);
+    });
+  }
+</script>
+
+</body>
+</html>
