@@ -3,17 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <title>Appointment Booking</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+
   <style>
-    body { font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px; background: #f7f7f7; border-radius: 8px; }
-    input, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
+    body { font-family: Arial; max-width: 900px; margin: 40px auto; padding: 20px; }
+    #calendar { margin-top: 30px; background: white; padding: 20px; border-radius: 8px; }
+    input, button, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
     button { background: #007bff; color: white; cursor: pointer; }
     button:hover { background: #0056b3; }
-    #appointments { margin-top: 20px; background: white; padding: 15px; border-radius: 5px; }
+    #bookingPanel { display: none; background: #f7f7f7; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    #appointments { margin-top: 20px; background: #fafafa; padding: 15px; border-radius: 5px; }
   </style>
 </head>
 <body>
 
-  <h1>Book an Appointment</h1>
+  <h1>Appointment Booking</h1>
 
   <h2>Register</h2>
   <input id="regEmail" placeholder="Email">
@@ -25,24 +30,31 @@
   <input id="logPassword" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 
-  <h2>Create Appointment</h2>
-  <label>Select Date</label>
-  <input id="date" type="date">
+  <h2>Your Calendar</h2>
+  <div id="calendar"></div>
 
-  <label>Select Time</label>
-  <input id="time" type="time">
+  <div id="bookingPanel">
+    <h3>Book Appointment for <span id="selectedDate"></span></h3>
 
-  <label>Description</label>
-  <input id="desc" placeholder="Reason for appointment">
+    <label>Select Time</label>
+    <input id="time" type="time">
 
-  <button onclick="book()">Book Appointment</button>
+    <label>Description</label>
+    <input id="desc" placeholder="Reason for appointment">
+
+    <button onclick="book()">Book Appointment</button>
+  </div>
 
   <h2>Your Appointments</h2>
   <button onclick="loadAppointments()">Refresh List</button>
   <div id="appointments"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
   <script>
     let token = null;
+    let selectedDate = null;
+    let calendar = null;
 
     async function register() {
       await fetch("/register", {
@@ -68,12 +80,49 @@
       const data = await res.json();
       token = data.token;
       alert("Logged in!");
+      loadCalendarEvents();
+    }
+
+    function initCalendar() {
+      const calendarEl = document.getElementById("calendar");
+
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        selectable: true,
+        events: [],
+
+        dateClick: function(info) {
+          selectedDate = info.dateStr;
+          document.getElementById("selectedDate").innerText = selectedDate;
+          document.getElementById("bookingPanel").style.display = "block";
+        }
+      });
+
+      calendar.render();
+    }
+
+    async function loadCalendarEvents() {
+      if (!token) return;
+
+      const res = await fetch("/appointments", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+
+      const appts = await res.json();
+
+      const events = appts.map(a => ({
+        title: a.description,
+        start: a.date
+      }));
+
+      calendar.removeAllEvents();
+      calendar.addEventSource(events);
     }
 
     async function book() {
       if (!token) return alert("Please log in first.");
 
-      const dateTime = `${date.value}T${time.value}:00`;
+      const dateTime = `${selectedDate}T${time.value}:00`;
 
       await fetch("/appointments", {
         method: "POST",
@@ -89,6 +138,7 @@
 
       alert("Appointment booked!");
       loadAppointments();
+      loadCalendarEvents();
     }
 
     async function loadAppointments() {
@@ -109,6 +159,8 @@
         container.appendChild(div);
       });
     }
+
+    initCalendar();
   </script>
 
 </body>
