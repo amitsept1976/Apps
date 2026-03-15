@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@300;400;500&family=Tiro+Devanagari+Marathi:ital@0;1&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+<!-- Marble Hero -->
+<section class="marble-hero">
+
+  <!-- SVG Marble Background -->
+  <div class="marble-bg" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <filter id="blur-veins">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.008" numOctaves="6" seed="42" result="noise"/>
+          <feColorMatrix type="saturate" values="0" in="noise" result="gray"/>
+          <feComponentTransfer in="gray" result="stretched">
+            <feFuncR type="gamma" amplitude="1" exponent="0.45" offset="0"/>
+            <feFuncG type="gamma" amplitude="1" exponent="0.45" offset="0"/>
+            <feFuncB type="gamma" amplitude="1" exponent="0.45" offset="0"/>
+          </feComponentTransfer>
+          <feColorMatrix type="matrix"
+            values="0.12 0 0 0 0.88
+                    0.12 0 0 0 0.88
+                    0.12 0 0 0 0.88
+                    0    0 0 1 0"
+            in="stretched" result="marble-color"/>
+          <feBlend in="marble-color" in2="marble-color" mode="normal"/>
+        </filter>
+
+        <filter id="vein-detail">
+          <feTurbulence type="turbulence" baseFrequency="0.03 0.018" numOctaves="4" seed="17" result="t"/>
+          <feColorMatrix type="matrix"
+            values="0 0 0 0 0.96
+                    0 0 0 0 0.95
+                    0 0 0 0 0.94
+                    0 0 8 -3.5 -1" in="t"/>
+        </filter>
+
+        <!-- Blur for the frosted glass overlay -->
+        <filter id="frost" x="-10%" y="-10%" width="120%" height="120%">
+          <feGaussianBlur stdDeviation="18"/>
+        </filter>
+      </defs>
+
+      <!-- Base warm white marble layer -->
+      <rect width="100%" height="100%" fill="#f5f2ed"/>
+
+      <!-- Primary marble texture -->
+      <rect width="100%" height="100%" filter="url(#blur-veins)" opacity="0.92"/>
+
+      <!-- Secondary fine vein detail -->
+      <rect width="100%" height="100%" filter="url(#vein-detail)" opacity="0.18"/>
+
+      <!-- Soft grey veins painted as paths -->
+      <g stroke="#c8c0b4" fill="none" stroke-linecap="round" opacity="0.35">
+        <path d="M-40,180 Q120,140 280,200 T600,170 T900,210" stroke-width="1.2"/>
+        <path d="M50,320 Q200,280 380,350 T720,310 T1000,340" stroke-width="0.8"/>
+        <path d="M-20,480 Q180,440 360,510 T680,460 T1100,490" stroke-width="1.4"/>
+        <path d="M100,90  Q260,60  420,110 T740,80  T1050,100" stroke-width="0.6"/>
+        <path d="M0,560   Q220,520 400,580 T760,540 T1100,570" stroke-width="0.9"/>
+      </g>
+      <g stroke="#b8b0a4" fill="none" stroke-linecap="round" opacity="0.2">
+        <path d="M-60,250 Q160,210 340,270 T660,240 T1000,260" stroke-width="2.5"/>
+        <path d="M80,420  Q300,380 500,440 T820,400 T1080,430" stroke-width="1.8"/>
+      </g>
+
+      <!-- Frosted-glass white overlay for readability -->
+      <rect width="100%" height="100%" fill="white" opacity="0.52"/>
+    </svg>
+  </div>
+
+  <!-- Content -->
+  <div class="marble-content">
+    <div class="marathi-title-wrap">
+      <span class="marathi-title">बारा क्षार</span>
+    </div>
+    <div class="hero-badge">Consultation Booking</div>
+    <h1 class="hero-title">Book expert consultations,<br><em>effortlessly</em>.</h1>
+    <p class="hero-sub">Schedule, manage, and track all your consultation appointments in one place. No more back-and-forth emails.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Create free account</a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-lg">Sign in →</a>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="feature-card">
+    <div class="feature-icon">📅</div>
+    <h3>Book in seconds</h3>
+    <p>Select your date, time, and consultant. Your appointment is confirmed instantly.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">✏️</div>
+    <h3>Edit anytime</h3>
+    <p>Plans change. Reschedule or update your appointments before the day arrives.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🔒</div>
+    <h3>Private & secure</h3>
+    <p>Your bookings are visible only to you. Secured with hashed passwords.</p>
+  </div>
+</section>
+{% endblock %}
