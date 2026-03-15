@@ -1,13 +1,13 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+import flask_login
 from dotenv import load_dotenv
 
 load_dotenv()
 
 db = SQLAlchemy()
-login_manager = LoginManager()
+login_manager = flask_login.LoginManager()
 
 
 def create_app():
