@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard">
+  <div class="dashboard-header">
+    <div>
+      <h1 class="page-title">Good day, {{ current_user.first_name }} 👋</h1>
+      <p class="page-sub">Here are your consultations.</p>
+    </div>
+    <a href="{{ url_for('appointments.new_appointment') }}" class="btn btn-primary">+ Book New</a>
+  </div>
+
+  <!-- Upcoming -->
+  <section class="appt-section">
+    <h2 class="section-title">Upcoming <span class="badge">{{ upcoming|length }}</span></h2>
+    {% if upcoming %}
+      <div class="appt-grid">
+        {% for a in upcoming %}
+        <div class="appt-card appt-{{ a.status }}">
+          <div class="appt-card-header">
+            <span class="appt-type-badge">{{ a.consultation_type.capitalize() }}</span>
+            <span class="appt-status status-{{ a.status }}">{{ a.status.capitalize() }}</span>
+          </div>
+          <h3 class="appt-title">{{ a.title }}</h3>
+          <div class="appt-meta">
+            <span>🗓 {{ a.appointment_date.strftime('%b %d, %Y') }}</span>
+            <span>⏰ {{ a.appointment_time.strftime('%I:%M %p') }}</span>
+            <span>⏱ {{ a.duration_minutes }} min</span>
+          </div>
+          <div class="appt-consultant">with <strong>{{ a.consultant_name }}</strong></div>
+          <div class="appt-actions">
+            <a href="{{ url_for('appointments.view_appointment', appointment_id=a.id) }}" class="btn btn-sm btn-outline">View</a>
+            <a href="{{ url_for('appointments.edit_appointment', appointment_id=a.id) }}" class="btn btn-sm btn-outline">Edit</a>
+            <form method="POST" action="{{ url_for('appointments.cancel_appointment', appointment_id=a.id) }}" style="display:inline" onsubmit="return confirm('Cancel this appointment?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>No upcoming appointments.</p>
+        <a href="{{ url_for('appointments.new_appointment') }}" class="btn btn-primary">Book your first one</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Past -->
+  {% if past %}
+  <section class="appt-section">
+    <h2 class="section-title">Past Appointments</h2>
+    <div class="appt-table-wrap">
+      <table class="appt-table">
+        <thead>
+          <tr><th>Title</th><th>Date</th><th>Consultant</th><th>Type</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for a in past %}
+          <tr>
+            <td>{{ a.title }}</td>
+            <td>{{ a.appointment_date.strftime('%b %d, %Y') }}</td>
+            <td>{{ a.consultant_name }}</td>
+            <td>{{ a.consultation_type.capitalize() }}</td>
+            <td><span class="appt-status status-{{ a.status }}">{{ a.status.capitalize() }}</span></td>
+            <td><a href="{{ url_for('appointments.view_appointment', appointment_id=a.id) }}" class="btn btn-sm btn-outline">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

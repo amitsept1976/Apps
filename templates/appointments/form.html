@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form-container">
+  <div class="form-card">
+    <a href="{{ url_for('appointments.dashboard') }}" class="back-link">← Back to Dashboard</a>
+    <h2 class="auth-title">{{ action }} Appointment</h2>
+
+    <form method="POST" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        {{ form.title.label(class="form-label") }}
+        {{ form.title(class="form-input" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Annual health check-up") }}
+        {% for e in form.title.errors %}<span class="form-error">{{ e }}</span>{% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.description.label(class="form-label") }} <span class="form-optional">(optional)</span>
+        {{ form.description(class="form-input form-textarea", rows=3, placeholder="Brief reason for consultation…") }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          {{ form.appointment_date.label(class="form-label") }}
+          {{ form.appointment_date(class="form-input" + (" is-invalid" if form.appointment_date.errors else "")) }}
+          {% for e in form.appointment_date.errors %}<span class="form-error">{{ e }}</span>{% endfor %}
+        </div>
+        <div class="form-group">
+          {{ form.appointment_time.label(class="form-label") }}
+          {{ form.appointment_time(class="form-input" + (" is-invalid" if form.appointment_time.errors else "")) }}
+          {% for e in form.appointment_time.errors %}<span class="form-error">{{ e }}</span>{% endfor %}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          {{ form.duration_minutes.label(class="form-label") }}
+          {{ form.duration_minutes(class="form-input form-select") }}
+        </div>
+        <div class="form-group">
+          {{ form.consultation_type.label(class="form-label") }}
+          {{ form.consultation_type(class="form-input form-select") }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        {{ form.consultant_name.label(class="form-label") }}
+        {{ form.consultant_name(class="form-input" + (" is-invalid" if form.consultant_name.errors else ""), placeholder="Dr. Jane Smith") }}
+        {% for e in form.consultant_name.errors %}<span class="form-error">{{ e }}</span>{% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.notes.label(class="form-label") }} <span class="form-optional">(optional)</span>
+        {{ form.notes(class="form-input form-textarea", rows=3, placeholder="Any additional notes or preparation…") }}
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('appointments.dashboard') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">{{ action }} Appointment</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

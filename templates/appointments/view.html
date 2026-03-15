@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="view-container">
+  <a href="{{ url_for('appointments.dashboard') }}" class="back-link">← Back to Dashboard</a>
+
+  <div class="view-card">
+    <div class="view-header">
+      <div>
+        <span class="appt-type-badge">{{ appointment.consultation_type.capitalize() }}</span>
+        <h1 class="view-title">{{ appointment.title }}</h1>
+      </div>
+      <span class="appt-status status-{{ appointment.status }} status-lg">{{ appointment.status.capitalize() }}</span>
+    </div>
+
+    <dl class="detail-grid">
+      <dt>Date</dt>
+      <dd>{{ appointment.appointment_date.strftime('%A, %B %d, %Y') }}</dd>
+
+      <dt>Time</dt>
+      <dd>{{ appointment.appointment_time.strftime('%I:%M %p') }} ({{ appointment.duration_minutes }} min)</dd>
+
+      <dt>Consultant</dt>
+      <dd>{{ appointment.consultant_name }}</dd>
+
+      {% if appointment.description %}
+      <dt>Description</dt>
+      <dd>{{ appointment.description }}</dd>
+      {% endif %}
+
+      {% if appointment.notes %}
+      <dt>Notes</dt>
+      <dd>{{ appointment.notes }}</dd>
+      {% endif %}
+
+      <dt>Booked on</dt>
+      <dd>{{ appointment.created_at.strftime('%b %d, %Y at %I:%M %p') }}</dd>
+    </dl>
+
+    {% if appointment.status != 'cancelled' %}
+    <div class="view-actions">
+      <a href="{{ url_for('appointments.edit_appointment', appointment_id=appointment.id) }}" class="btn btn-primary">Edit Appointment</a>
+      <form method="POST" action="{{ url_for('appointments.cancel_appointment', appointment_id=appointment.id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger">Cancel Appointment</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
