@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ title or 'ConsultBook' }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="{{ url_for('main.index') }}" class="nav-brand">
+    <span class="brand-icon">◈</span> ConsultBook
+  </a>
+  <div class="nav-links">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('appointments.dashboard') }}" class="nav-link">Dashboard</a>
+      <a href="{{ url_for('appointments.new_appointment') }}" class="nav-link nav-cta">+ Book</a>
+      <div class="nav-user">
+        <span>{{ current_user.first_name }}</span>
+        <a href="{{ url_for('auth.logout') }}" class="nav-link nav-logout">Log out</a>
+      </div>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}" class="nav-link">Log in</a>
+      <a href="{{ url_for('auth.register') }}" class="nav-link nav-cta">Get started</a>
+    {% endif %}
+  </div>
+</nav>
+
+<main class="main-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <p>© 2025 ConsultBook. Built on <a href="https://render.com" target="_blank">Render</a>.</p>
+</footer>
+
+</body>
+</html>
