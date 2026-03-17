@@ -17,12 +17,25 @@ def _normalize_database_uri(database_uri):
     return database_uri
 
 
+def _env_flag(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _configure_app(app):
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
     app.config["SQLALCHEMY_DATABASE_URI"] = _normalize_database_uri(
         os.environ.get("DATABASE_URL", "sqlite:///appointments.db")
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+
+def _should_auto_create_tables(app):
+    if "AUTO_CREATE_TABLES" in os.environ:
+        return _env_flag("AUTO_CREATE_TABLES")
+    return app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite")
 
 
 def _init_extensions(app):
@@ -58,8 +71,9 @@ def create_app():
     _configure_login_manager()
     _register_blueprints(app)
 
-    with app.app_context():
-        db.create_all()
+    if _should_auto_create_tables(app):
+        with app.app_context():
+            db.create_all()
 
     return app
 
