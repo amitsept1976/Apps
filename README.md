@@ -124,6 +124,98 @@ Tables are created automatically on first run via `db.create_all()`.
 
 ---
 
+## Detailed Render Deployment Steps
+
+### 1. Prepare the repo
+
+Make sure these files are committed:
+- `render.yaml`
+- `requirements.txt`
+- `wsgi.py`
+- SQL scripts in `sql/`
+
+### 2. Push to GitHub
+
+Render deploys from your remote repository, so push all current changes before creating the service.
+
+### 3. Create services on Render
+
+1. Open Render dashboard
+2. Select **New** -> **Blueprint**
+3. Connect the repository
+4. Confirm Render detected `render.yaml`
+5. Click **Apply**
+
+This creates:
+- Web service: `consultbook`
+- Postgres database: `consultbook-db`
+
+### 4. Verify environment variables
+
+Open the Web Service on Render and confirm:
+- `DATABASE_URL` is linked from `consultbook-db`
+- `SECRET_KEY` has generated value
+- `PYTHON_VERSION` is set to 3.11.0
+
+### 5. First deploy checks
+
+After deployment succeeds:
+1. Open the Render service URL
+2. Confirm home page loads
+3. Register a test user
+4. Create a test appointment
+
+If deployment fails, inspect logs from **Web Service -> Logs** first.
+
+---
+
+## SQL Scripts for Auth and Appointment Tables
+
+Added scripts:
+- `sql/01_auth_tables.sql` : creates `users` table and email index
+- `sql/02_appointment_tables.sql` : creates `appointments` table, constraints, indexes, and update trigger
+- `sql/00_init_all.sql` : convenience wrapper that runs both scripts with psql `\\i`
+
+These scripts are PostgreSQL-compatible and match the application models.
+
+---
+
+## Run SQL Scripts on Render Postgres
+
+### Option A: Local psql against Render external DB URL
+
+1. In Render dashboard, open database `consultbook-db`
+2. Copy the **External Database URL**
+3. From your machine, run:
+
+```bash
+psql "<EXTERNAL_DATABASE_URL>?sslmode=require" -f sql/01_auth_tables.sql
+psql "<EXTERNAL_DATABASE_URL>?sslmode=require" -f sql/02_appointment_tables.sql
+```
+
+Or run the combined script from the `sql` directory:
+
+```bash
+cd sql
+psql "<EXTERNAL_DATABASE_URL>?sslmode=require" -f 00_init_all.sql
+```
+
+### Option B: Render Shell/Job (if you prefer server-side execution)
+
+1. Start a shell with psql available (or use a one-off job/container)
+2. Set `DATABASE_URL` environment variable
+3. Run the same `psql -f` commands above
+
+### Validate tables
+
+```bash
+psql "<EXTERNAL_DATABASE_URL>?sslmode=require" -c "\\dt"
+psql "<EXTERNAL_DATABASE_URL>?sslmode=require" -c "SELECT COUNT(*) FROM users;"
+psql "<EXTERNAL_DATABASE_URL>?sslmode=require" -c "SELECT COUNT(*) FROM appointments;"
+```
+
+---
+
 ## Environment Variables
 
 | Variable | Description |
