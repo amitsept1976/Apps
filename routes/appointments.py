@@ -8,6 +8,40 @@ from datetime import datetime
 appointments_bp = Blueprint("appointments", __name__)
 
 
+def _require_user_appointment(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    if appointment.user_id != current_user.id:
+        abort(403)
+    return appointment
+
+
+def _build_appointment_from_form(form):
+    return Appointment(
+        user_id=current_user.id,
+        title=form.title.data.strip(),
+        description=form.description.data,
+        appointment_date=form.appointment_date.data,
+        appointment_time=form.appointment_time.data,
+        duration_minutes=form.duration_minutes.data,
+        consultant_name=form.consultant_name.data.strip(),
+        consultation_type=form.consultation_type.data,
+        notes=form.notes.data,
+        status="confirmed",
+    )
+
+
+def _apply_form_to_appointment(appointment, form):
+    appointment.title = form.title.data.strip()
+    appointment.description = form.description.data
+    appointment.appointment_date = form.appointment_date.data
+    appointment.appointment_time = form.appointment_time.data
+    appointment.duration_minutes = form.duration_minutes.data
+    appointment.consultant_name = form.consultant_name.data.strip()
+    appointment.consultation_type = form.consultation_type.data
+    appointment.notes = form.notes.data
+    appointment.updated_at = datetime.utcnow()
+
+
 @appointments_bp.route("/dashboard")
 @login_required
 def dashboard():
@@ -50,18 +84,7 @@ def dashboard():
 def new_appointment():
     form = AppointmentForm()
     if form.validate_on_submit():
-        appointment = Appointment(
-            user_id=current_user.id,
-            title=form.title.data.strip(),
-            description=form.description.data,
-            appointment_date=form.appointment_date.data,
-            appointment_time=form.appointment_time.data,
-            duration_minutes=form.duration_minutes.data,
-            consultant_name=form.consultant_name.data.strip(),
-            consultation_type=form.consultation_type.data,
-            notes=form.notes.data,
-            status="confirmed",
-        )
+        appointment = _build_appointment_from_form(form)
         db.session.add(appointment)
         db.session.commit()
         flash("Appointment booked successfully!", "success")
@@ -72,33 +95,21 @@ def new_appointment():
 @appointments_bp.route("/appointments/<int:appointment_id>")
 @login_required
 def view_appointment(appointment_id):
-    appointment = Appointment.query.get_or_404(appointment_id)
-    if appointment.user_id != current_user.id:
-        abort(403)
+    appointment = _require_user_appointment(appointment_id)
     return render_template("appointments/view.html", appointment=appointment, title="Appointment Details")
 
 
 @appointments_bp.route("/appointments/<int:appointment_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_appointment(appointment_id):
-    appointment = Appointment.query.get_or_404(appointment_id)
-    if appointment.user_id != current_user.id:
-        abort(403)
+    appointment = _require_user_appointment(appointment_id)
     if appointment.status == "cancelled":
         flash("Cancelled appointments cannot be edited.", "warning")
         return redirect(url_for("appointments.dashboard"))
 
     form = AppointmentForm(obj=appointment)
     if form.validate_on_submit():
-        appointment.title = form.title.data.strip()
-        appointment.description = form.description.data
-        appointment.appointment_date = form.appointment_date.data
-        appointment.appointment_time = form.appointment_time.data
-        appointment.duration_minutes = form.duration_minutes.data
-        appointment.consultant_name = form.consultant_name.data.strip()
-        appointment.consultation_type = form.consultation_type.data
-        appointment.notes = form.notes.data
-        appointment.updated_at = datetime.utcnow()
+        _apply_form_to_appointment(appointment, form)
         db.session.commit()
         flash("Appointment updated successfully!", "success")
         return redirect(url_for("appointments.view_appointment", appointment_id=appointment.id))
@@ -112,9 +123,7 @@ def edit_appointment(appointment_id):
 @appointments_bp.route("/appointments/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
 def cancel_appointment(appointment_id):
-    appointment = Appointment.query.get_or_404(appointment_id)
-    if appointment.user_id != current_user.id:
-        abort(403)
+    appointment = _require_user_appointment(appointment_id)
     if appointment.status == "cancelled":
         flash("This appointment is already cancelled.", "info")
     else:

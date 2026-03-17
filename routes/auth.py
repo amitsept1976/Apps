@@ -7,6 +7,14 @@ from forms import RegistrationForm, LoginForm
 auth_bp = Blueprint("auth", __name__)
 
 
+def _normalize_email(value):
+    return value.lower().strip()
+
+
+def _optional_stripped(value):
+    return value.strip() if value else None
+
+
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
@@ -17,8 +25,8 @@ def register():
         user = User(
             first_name=form.first_name.data.strip(),
             last_name=form.last_name.data.strip(),
-            email=form.email.data.lower().strip(),
-            phone=form.phone.data.strip() if form.phone.data else None,
+            email=_normalize_email(form.email.data),
+            phone=_optional_stripped(form.phone.data),
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -37,7 +45,7 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower().strip()).first()
+        user = User.query.filter_by(email=_normalize_email(form.email.data)).first()
         if user and user.check_password(form.password.data):
             login_user(user)
             flash(f"Welcome back, {user.first_name}!", "success")
